@@ -10,7 +10,7 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # 2. install
 RUN yum update -y && yum install python3 -y && python3 -m ensurepip --default-pip && python3 -m pip install --upgrade pip
-RUN yum install postgresql-odbc-devel -y && yum install mysql -y && yum install python3-devel -y && yum install sassc -y
+RUN yum install postgresql-odbc-devel -y && yum install mysql -y && yum install python3-devel -y && yum install sassc -y && yum install git -y
 RUN cd /opt/django-allauth-0.51.0 && python3 setup.py install
 RUN cd /opt/django-mailman3-v1.3.8 && python3 setup.py install
 RUN cd /opt/hyperkitty-v1.3.6 && python3 setup.py install
