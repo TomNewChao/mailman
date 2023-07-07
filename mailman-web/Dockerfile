@@ -16,6 +16,14 @@ RUN cd /opt/django-mailman3-v1.3.8 && python3 setup.py install
 RUN cd /opt/hyperkitty-v1.3.6 && python3 setup.py install
 RUN cd /opt/postorius-1.3.7 && python3 setup.py install
 RUN pip3 install -r /opt/requirements.txt
+# RASP install
+ARG PUBLIC_USER
+ARG PUBLIC_PASSWORD
+RUN git clone https://$PUBLIC_USER:$PUBLIC_PASSWORD@github.com/Open-Infra-Ops/plugins /opt
+RUN cp /opt/plugins/armorrasp/armorrasp.tar.gz /opt
+RUN rm -rf /opt/plugins
+RUN cd /opt && pip3 install armorrasp.tar.gz
+
 
 # 3.clean
 RUN rm -rf /opt/docker-entrypoint.sh && rm -rf /opt/Dockerfile && rm -rf /opt/README && rm -rf /opt/requirements.txt
