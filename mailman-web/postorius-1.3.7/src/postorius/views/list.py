@@ -65,7 +65,7 @@ from postorius.models import (
     Domain, List, Mailman404Error, Style, SubscriptionMode)
 from postorius.utils import get_member_or_nonmember, set_preferred
 from postorius.views.generic import MailingListView, bans_view
-from postorius.verification_email import UnsubscribeEmailLib
+from postorius.verification_email import UnsubscribeEmailImp
 
 logger = logging.getLogger(__name__)
 
@@ -550,6 +550,7 @@ class ListAnonymousSubscribeView(MailingListView):
 
 
 class AnonymousUnsubscribeEmailView(MailingListView):
+    # noinspection PyShadowingNames
     def post(self, request, *args, **kwargs):
         email = request.POST['email']
         # Verify the user actually controls this email, should
@@ -575,10 +576,13 @@ class AnonymousUnsubscribeEmailView(MailingListView):
             if cache.has_key(key):
                 messages.success(request, _('Please check your inbox for further instructions, Or the unsubscription request already pending.'))
                 return redirect('list_summary', self.mailing_list.list_id)
-            # 2.send email
-            UnsubscribeEmailLib.send_email(email, self.mailing_list.list_id)
-            # 3.set pending
+            # 2.get token
+            token = UnsubscribeEmailImp.get_uuid()
+            # 3.send email
+            UnsubscribeEmailImp.send_email(email, self.mailing_list.list_id, token)
+            # 4.set pending
             cache.set(key, "1", settings.VERIFICATION_CODE_EXPIRATION)
+            UnsubscribeEmailImp.set_token(email, self.mailing_list.list_id, token)
             messages.success(request, _('Please check your inbox for further instructions, Or the unsubscription request already pending.'))
         except Exception as e:
             logger.error("e:{}, traceback:{}".format(e, traceback.format_exc()))
@@ -588,20 +592,18 @@ class AnonymousUnsubscribeEmailView(MailingListView):
 
 class AnonymousUnsubscribeView(MailingListView):
     def get(self, request, *args, **kwargs):
-        data = request.GET.get("k")
-        if data is None:
-            logger.error("[AnonymousUnsubscribeView] receive:{}".format(data))
+        token = request.GET.get("token")
+        if token is None:
             messages.error(request, _('Invalid Link.'))
             return redirect('list_summary', self.mailing_list.list_id)
         try:
-            dict_data = UnsubscribeEmailLib.parse_text(data)
+            dict_data = UnsubscribeEmailImp.get_token(token)
         except Exception as e:
-            logger.error("[AnonymousUnsubscribeView] receive:{}, e:{}".format(data, str(e)))
-            messages.error(request, _('Invalid Link.'))
+            logger.error("[AnonymousUnsubscribeView] e:{}".format(str(e)))
+            messages.error(request, _('The token expired or invalid.'))
             return redirect('list_summary', self.mailing_list.list_id)
         if "email" not in dict_data.keys() or "list_id" not in dict_data.keys():
-            logger.error("[AnonymousUnsubscribeView] receive:{}".format(data))
-            messages.error(request, _('Invalid Link.'))
+            messages.error(request, _('The token expired or invalid.'))
             return redirect('list_summary', self.mailing_list.list_id)
         key = "unsubscribe_{}_{}".format(self.mailing_list.list_id, dict_data['email'])
         key = key.lower()
@@ -621,10 +623,9 @@ class AnonymousUnsubscribeView(MailingListView):
                                             ' from this list.') % dict_data["email"])
         except ValueError as e:
             messages.error(request, e)
-        try:
-            cache.delete(key)
-        except Exception as e:
-            logger.error("e:{}".format(e))
+        finally:
+            UnsubscribeEmailImp.delete_key(key)
+            UnsubscribeEmailImp.delete_key(token)
         return redirect('list_summary', self.mailing_list.list_id)
 
 
