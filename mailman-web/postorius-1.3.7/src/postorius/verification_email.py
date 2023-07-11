@@ -3,13 +3,14 @@
 # @Author  : Tom_zc
 # @FileName: verification_email.py
 # @Software: PyCharm
-import os
-import binascii
+import time
+import random
+import hashlib
 import json
 import logging
 from django.core.mail import send_mail
 from django.conf import settings
-from pyDes import des, CBC, PAD_PKCS5
+from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -31,26 +32,28 @@ Template = '''
 '''
 
 
-class DESCrypt:
-    secret_key = "23129838"
-    iv = "36384698"
+class UnsubscribeEmailImp(object):
+    unsubscribe_url = "https://{}/postorius/lists/{}/anonymous_unsubscribe?token={}"
+    cache_key = "unsubscribe_{}"
 
     @classmethod
-    def encrypt(cls, s):
-        k = des(cls.secret_key, CBC, cls.iv, pad=None, padmode=PAD_PKCS5)
-        en = k.encrypt(s, padmode=PAD_PKCS5)
-        return binascii.b2a_hex(en)
+    def _next_unpredictable_id(cls):
+        """Calculate a unique token."""
+        right_now = time.time()
+        x = random.random() + right_now % 1.0 + time.process_time() % 1.0
+        return hashlib.sha1(repr(x).encode('utf-8')).hexdigest()
 
     @classmethod
-    def decrypt(cls, s):
-        k = des(cls.secret_key, CBC, cls.iv, pad=None, padmode=PAD_PKCS5)
-        de = k.decrypt(binascii.a2b_hex(s), padmode=PAD_PKCS5)
-        return de
-
-
-class UnsubscribeEmailLib(object):
-    aescrypt = DESCrypt()
-    unsubscribe_url = "https://{}/postorius/lists/{}/anonymous_unsubscribe?k={}"
+    def get_uuid(cls):
+        """get unpredicatable id"""
+        for attempts in range(5):
+            token = cls._next_unpredictable_id()
+            # In practice, we'll never get a duplicate, but we'll be anal about checking anyway.
+            key = cls.cache_key.format(token)
+            if not cache.has_key(key):
+                return token
+        else:
+            raise RuntimeError('Could not find a valid pendings token')
 
     @classmethod
     def send_message(cls, list_name, templates, recipient_list):
@@ -65,18 +68,10 @@ class UnsubscribeEmailLib(object):
                   html_message=templates)
 
     @classmethod
-    def send_email(cls, email, list_id):
+    def send_email(cls, email, list_id, token):
         """send the unsubscribe email to user"""
         web_domain = settings.SERVE_WEB_DOMAIN
-        # https://mailweb.osinfra.cn/postorius/lists/tom.lists.osinfra.cn/anonymous_subscribe
-        save_dict = {
-            "email": email,
-            "list_id": list_id,
-        }
-        str_data = json.dumps(save_dict)
-        encrypt_text = cls.aescrypt.encrypt(str_data)
-        url_data = str(encrypt_text, encoding="utf-8")
-        link = cls.unsubscribe_url.format(web_domain, list_id, url_data)
+        link = cls.unsubscribe_url.format(web_domain, list_id, token)
         list_name = list_id.replace(".", "@", 1)
         template = Template.format(
             domain=list_name,
@@ -85,8 +80,29 @@ class UnsubscribeEmailLib(object):
         cls.send_message(list_name, template, email)
 
     @classmethod
-    def parse_text(cls, encrypt_text):
+    def set_token(cls, email, list_id, token):
+        """storage token into redis"""
+        save_dict = {
+            "email": email,
+            "list_id": list_id,
+        }
+        key = cls.cache_key.format(token)
+        cache.hmset(key, save_dict)
+        cache.expire(key, settings.VERIFICATION_CODE_EXPIRATION)
+        return True
+
+    @classmethod
+    def get_token(cls, token):
         """parse text to obj"""
-        encrypt_str = cls.aescrypt.decrypt(bytes(encrypt_text, encoding="utf-8"))
-        save_dict = json.loads(encrypt_str)
-        return save_dict
+        key = cls.cache_key.format(token)
+        key_list = ["email", "list_id"]
+        value_list = cache.hmget(key, key_list)
+        dict_data = dict(zip(key_list, value_list))
+        return dict_data
+
+    @classmethod
+    def delete_key(cls, key):
+        try:
+            cache.delete(key)
+        except Exception as e:
+            logger.error("e:{}".format(e))
