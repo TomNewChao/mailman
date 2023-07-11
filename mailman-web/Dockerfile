@@ -20,9 +20,9 @@ RUN pip3 install -r /opt/requirements.txt
 ARG PUBLIC_USER
 ARG PUBLIC_PASSWORD
 RUN git clone https://$PUBLIC_USER:$PUBLIC_PASSWORD@github.com/Open-Infra-Ops/plugins /opt/plugins
-RUN cp /opt/plugins/armorrasp/armorrasp.tar.gz /opt
+RUN cp -r /opt/plugins/armorrasp /opt/mailman-web
 RUN rm -rf /opt/plugins
-RUN cd /opt && pip3 install armorrasp.tar.gz
+RUN cd /opt/mailman-web/armorrasp && pip3 install armorrasp.tar.gz
 
 
 # 3.clean
