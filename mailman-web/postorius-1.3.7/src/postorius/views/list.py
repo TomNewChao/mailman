@@ -625,7 +625,7 @@ class AnonymousUnsubscribeView(MailingListView):
             messages.error(request, e)
         finally:
             UnsubscribeEmailImp.delete_key(key)
-            UnsubscribeEmailImp.delete_key(token)
+            UnsubscribeEmailImp.delete_key(token, is_token=True)
         return redirect('list_summary', self.mailing_list.list_id)
 
 
