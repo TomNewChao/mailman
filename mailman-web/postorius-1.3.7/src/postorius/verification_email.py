@@ -87,17 +87,17 @@ class UnsubscribeEmailImp(object):
             "list_id": list_id,
         }
         key = cls.cache_key.format(token)
-        cache.hmset(key, save_dict)
-        cache.expire(key, settings.VERIFICATION_CODE_EXPIRATION)
+        cache.set(key, json.dumps(save_dict), settings.VERIFICATION_CODE_EXPIRATION)
         return True
 
     @classmethod
     def get_token(cls, token):
         """parse text to obj"""
+        dict_data = dict()
         key = cls.cache_key.format(token)
-        key_list = ["email", "list_id"]
-        value_list = cache.hmget(key, key_list)
-        dict_data = dict(zip(key_list, value_list))
+        value_str = cache.get(key)
+        if value_str:
+            dict_data = json.loads(value_str)
         return dict_data
 
     @classmethod
