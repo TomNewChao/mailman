@@ -101,8 +101,10 @@ class UnsubscribeEmailImp(object):
         return dict_data
 
     @classmethod
-    def delete_key(cls, key):
+    def delete_key(cls, key, is_token=False):
         try:
+            if is_token:
+                key = cls.cache_key.format(key)
             cache.delete(key)
         except Exception as e:
             logger.error("e:{}".format(e))
