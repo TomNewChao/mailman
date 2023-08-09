@@ -193,7 +193,7 @@ class ListAnonymousSubscribe(forms.Form):
     )), widget=forms.CheckboxInput())
 
     data_storage_check = forms.BooleanField(initial=False, required=True, label=_(mark_safe(
-        'I agree to the storage of personal data (email address) in %s for the provision of email subscription services.' % (os.getenv("DATA_STORAGE_LOCATION", "Hong Kong, China"))
+        'I agree to the storage of personal data (email address) in %s.' % (os.getenv("DATA_STORAGE_LOCATION", "Hong Kong, China"))
     )), widget=forms.CheckboxInput())
 
 
