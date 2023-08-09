@@ -192,6 +192,10 @@ class ListAnonymousSubscribe(forms.Form):
         '<a href="%s">Community Conduct</a>.' % (os.getenv("PRIVACY_LINK", "https://www.openeuler.org/en/other/privacy/"), os.getenv("CONDUCT_LINK", "https://www.openeuler.org/en/community/conduct/"))
     )), widget=forms.CheckboxInput())
 
+    data_storage_check = forms.BooleanField(initial=False, required=True, label=_(mark_safe(
+        'I agree to the storage of personal data (email address) in %s for the provision of email subscription services.' % (os.getenv("DATA_STORAGE_LOCATION", "Hong Kong, China"))
+    )), widget=forms.CheckboxInput())
+
 
 class ListAnonymousUnsubscribe(forms.Form):
     """Form fields to join an existing list as an anonymous user.
