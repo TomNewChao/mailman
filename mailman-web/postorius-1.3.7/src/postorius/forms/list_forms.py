@@ -193,7 +193,7 @@ class ListAnonymousSubscribe(forms.Form):
     )), widget=forms.CheckboxInput())
 
     data_storage_check = forms.BooleanField(initial=False, required=True, label=_(mark_safe(
-        'I agree that the openGauss community collects my email address and name and stores them in %s to provide email subscription services.' % (os.getenv("DATA_STORAGE_LOCATION", "Hong Kong,China"))
+        'I agree that the %s community collects my email address and name and stores them in %s to provide email subscription services.' % (os.getenv("DATA_STORAGE_COMMUNITY", "openGauss"), os.getenv("DATA_STORAGE_LOCATION", "Hong Kong,China"))
     )), widget=forms.CheckboxInput())
 
 
