@@ -2,9 +2,9 @@ django_gravatar==0.1.0
 django-gravatar2==1.4.4
 dj_database_url==1.0.0
 whoosh==2.7.4
-uwsgi==2.0.22
+uwsgi==2.0.21
 pymysql==1.0.2
-django==3.2.20
+django==3.2.16
 psycopg2-binary==2.9.5
 pyDes==2.0.1
 psycopg2-binary==2.9.5
