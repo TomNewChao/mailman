@@ -24,6 +24,7 @@
 import datetime
 import json
 import re
+import logging
 
 from django.conf import settings
 from django.contrib import messages
@@ -52,7 +53,7 @@ REPLY_RE = re.compile(r'^(re:\s*)*', re.IGNORECASE)
 #: GET request parameter that signifies the backend to respond with a page that
 #: doesn't require Javascript to function.
 NO_SCRIPT = 'noscript'
-
+logger = logging.getLogger(__name__)
 
 def _get_thread_replies(request, thread, limit, offset=0):
     '''
@@ -148,10 +149,10 @@ def thread_index(request, mlist_fqdn, threadid, month=None, year=None):
         try:
             email_content = list_attach[0].content.tobytes().decode(list_attach[0].encoding)
             email_text = clean_html(email_content)
-            if starting_email.content.strip() != email_text.strip():
-                starting_email.content += email_text.strip()
+            if email_text:
+                starting_email.content = email_text
         except Exception as e:
-            pass
+            logger.error("e:{}".format(e))
 
     sort_mode = request.GET.get("sort", "thread")
     if request.user.is_authenticated:
