@@ -149,9 +149,7 @@ def thread_index(request, mlist_fqdn, threadid, month=None, year=None):
         try:
             email_content = list_attach[0].content.tobytes().decode(list_attach[0].encoding)
             email_text = clean_html(email_content)
-            if email_text and starting_email.content:
-                starting_email.content = email_text
-            elif email_text:
+            if email_text:
                 starting_email.content = email_text
         except Exception as e:
             logger.error("e:{}".format(e))
