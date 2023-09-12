@@ -130,27 +130,12 @@ def thread_index(request, mlist_fqdn, threadid, month=None, year=None):
 
     starting_email = thread.starting_email
 
-    # clean html to text
-    def clean_html(html):
-        # First we remove inline JavaScript/CSS:
-        cleaned = re.sub(r"(?is)<(script|style).*?>.*?(</\1>)", "", html.strip())
-        # Then we remove html comments. This has to be done before removing regular
-        # tags since comments can contain '>' characters.
-        cleaned = re.sub(r"(?s)<!--(.*?)-->[\n]?", "", cleaned)
-        # Next we can remove the remaining tags:
-        cleaned = re.sub(r"(?s)<.*?>", " ", cleaned)
-        # Finally, we deal with whitespace
-        cleaned = re.sub(r"&nbsp;", " ", cleaned)
-        cleaned = re.sub(r"  ", " ", cleaned)
-        return cleaned.strip()
-
     list_attach = list(filter(lambda x: x.name == "attachment.html" and x.content_type == "text/html", starting_email.attachments.all()))
     if len(list_attach) != 0:
         try:
             email_content = list_attach[0].content.tobytes().decode(list_attach[0].encoding)
-            email_text = clean_html(email_content)
-            if email_text:
-                starting_email.content = email_text
+            if email_content:
+                starting_email.content = email_content
         except Exception as e:
             logger.error("e:{}".format(e))
 
