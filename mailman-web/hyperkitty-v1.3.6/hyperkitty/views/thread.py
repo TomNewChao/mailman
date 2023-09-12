@@ -137,6 +137,11 @@ def thread_index(request, mlist_fqdn, threadid, month=None, year=None):
         # Then we remove html comments. This has to be done before removing regular
         # tags since comments can contain '>' characters.
         cleaned = re.sub(r"(?s)<!--(.*?)-->[\n]?", "", cleaned)
+        # convert br to \r\n
+        cleaned = re.sub(r"<br>", r"\r\n", cleaned)
+        # convert lt gt le eq to
+        cleaned = re.sub(r"&lt", r"<", cleaned)
+        cleaned = re.sub(r"&gt", r">", cleaned)
         # Next we can remove the remaining tags:
         cleaned = re.sub(r"(?s)<.*?>", " ", cleaned)
         # Finally, we deal with whitespace
