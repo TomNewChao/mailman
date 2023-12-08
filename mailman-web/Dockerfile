@@ -1,6 +1,8 @@
 FROM openeuler/openeuler:22.03
-
-MAINTAINER TomNewChao<tom_toworld@163.com>
+RUN python3 -m ensurepip --default-pip && python3 -m pip install --upgrade pip
+RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+RUN pip config set global.trusted-host pypi.tuna.tsinghua.edu.cn
+RUN pip config set global.timeout 120
 
 # 1.copy
 COPY . /opt
@@ -9,8 +11,7 @@ RUN mv /opt/mailman-web-v0.4.4/mailman-web /opt
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # 2. install
-RUN yum update -y && yum install python3 -y && python3 -m ensurepip --default-pip && python3 -m pip install --upgrade pip
-RUN yum install postgresql-odbc-devel -y && yum install mysql -y && yum install python3-devel -y && yum install sassc -y && yum install git -y
+RUN yum update -y && yum install postgresql-odbc-devel -y && yum install mysql -y && yum install python3-devel -y && yum install sassc -y && yum install git -y
 RUN cd /opt/django-allauth-0.51.0 && python3 setup.py install
 RUN cd /opt/django-mailman3-v1.3.8 && python3 setup.py install
 RUN cd /opt/hyperkitty-v1.3.6 && python3 setup.py install

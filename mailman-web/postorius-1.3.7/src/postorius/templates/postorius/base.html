@@ -102,14 +102,6 @@
                             </div>
                         </li>
                     {% else %}
-                        <li class="nav-item"><a class="nav-link" href="{% url LOGIN_URL %}?next={{ next|default:request.path|urlencode }}">
-                            <span class="fa fa-sign-in"></span>
-                            {% trans 'Login' %}
-                        </a></li>
-<!--                        <li  class="nav-item"><a class="nav-link" href="{% url 'account_signup' %}?next={{next|default:request.path|urlencode}}">-->
-<!--                            <span class="fa fa-user-plus"></span>-->
-<!--                            {% trans 'Sign Up' %}-->
-<!--                        </a></li>-->
                     {% endif %}
                 </ul>
             </div>
